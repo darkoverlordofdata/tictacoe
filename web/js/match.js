@@ -1,4 +1,4 @@
-Match = function(){
+var Match = function(){
 
     var DEBUG = true;
 
@@ -168,6 +168,7 @@ Match = function(){
             _this.game.handleMatch('found', match);
             requestPlayersCallback = function(players, error) {
                 if (error) {
+                    if (DEBUG) console.log("requestPlayersInfo:" + error.message);
                     _this.game.handleMatch('error', "requestPlayersInfo:" + error.message)
                     return;
                 }
@@ -177,7 +178,7 @@ Match = function(){
             };
 
             _this.requestPlayersInfo = function(match) {
-                if (match.getExpectedPlayerCount() == 0) {
+                if (match.getExpectedPlayerCount() === 0) {
                     match.requestPlayersInfo(requestPlayersCallback);
                 }
             };
@@ -214,7 +215,7 @@ Match = function(){
                  * @param error
                  */
                 connectionWithPlayerFailed: function(match, player, error){
-                    alert("onMatchConnectionWithPlayerFailed: " + player + " " + error);
+                    if (DEBUG) console.log("onMatchConnectionWithPlayerFailed: " + player + " " + error);
                     _this.game.handleMatch('connectionWithPlayerFailed', match, player, error);
                 },
                 /**
@@ -224,7 +225,7 @@ Match = function(){
                  * @param error
                  */
                 failed: function(match, error){
-                    console.error("onMatchFailed " +  error);
+                    if (DEBUG) console.log("onMatchFailed " +  error);
                     _this.game.handleMatch('failed', match, error);
                 }
             });
@@ -232,7 +233,7 @@ Match = function(){
             // The match might be returned before connections have been established between players. At this stage, all the players are in the process of connecting to each other.
             // Always check the getExpectedPlayerCount value before starting a match. When its value reaches zero, all expected players are connected, and your game can begin the match.
             // If expectedPlayerCount > 0 waint until onMatchStateChanged events
-            if (match.getExpectedPlayerCount() == 0) {
+            if (match.getExpectedPlayerCount() === 0) {
                 match.requestPlayersInfo(requestPlayersCallback);
             }
         },
@@ -253,7 +254,7 @@ Match = function(){
                     if (!loggedIn || error) {
                         console.error("Login failed: " + JSON.stringify(error));
                         //Tell the user that Game Center is Disabled
-                        if (!autoLogin && error.code == 2 && _this.usingGameCenter) {
+                        if (!autoLogin && error.code === 2 && _this.usingGameCenter) {
                             Cocoon.Dialog.confirm({
                                 title : "Game Center Disabled",
                                 message : "Sign in with the Game Center application to enable it",
