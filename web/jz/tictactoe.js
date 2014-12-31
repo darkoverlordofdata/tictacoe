@@ -28,7 +28,6 @@ function TicTacToeGameModel(game, width, height, size)
     this.oTokens = [[0,0,0],[0,0,0],[0,0,0]];
     this.xTokens = [[0,0,0],[0,0,0],[0,0,0]];
     this.boardRect = {x: width/2 - size/2, y: height/2-size/2, w:size, h:size };
-    this.players = [];
     this.playerTurn = 0;
     this.state = GAMESTATES.STATE_IDLE;
     this.isMultiplayerGame = false;
@@ -38,81 +37,104 @@ function TicTacToeGameModel(game, width, height, size)
 TicTacToeGameModel.prototype = {
 
     constructor: TicTacToeGameModel,
+    state: GAMESTATES.STATE_IDLE,
+    playerTurn: 0,
+    isMultiplayerGame: false,
+    localUserScore: 0,
     game: undefined,
     oTokens: undefined,
     xTokens: undefined,
     boardRect: undefined,
-    players: undefined,
-    playerTurn: 0,
-    state: GAMESTATES.STATE_IDLE,
-    isMultiplayerGame: false,
-    localUserScore: 0,
 
+    /**
+     *
+     * @param playersInfo
+     * @param services
+     */
     initGame: function(playersInfo, services) {
+        this.match.init(playersInfo, services, Math.random() < 0.5 ? 0 : 1, Math.random() < 0.5 ? 0 : 1);
         this.oTokens = [[0,0,0],[0,0,0],[0,0,0]];
         this.xTokens = [[0,0,0],[0,0,0],[0,0,0]];
-        this.players = playersInfo.slice();
         this.playerTurn = 0;
         this.playerTokenSelector= 0;
-
-        this.game.init(playersInfo, services)
-        ////order players by ID to sync multiplayer turn order
-        //this.players.sort(function(a,b) {return a.userID  < b.userID ? -1 : 1;} );
-        //
-        //
-        ////get the references to each multiplayer match instance
-        //for (var i = 0; i < this.players.length; ++i) {
-        //    this.players[i].match = null;
-        //    for (var j = 0; j < services.length; ++j) {
-        //        if (services[j] && services[j].getMatch().getLocalPlayerID() === this.players[i].userID ) {
-        //            this.players[i].match = services[j].getMatch();
-        //        }
-        //    }
-        //}
-        //
-        ////Only the first players sends a random value to determine the turn and tokens for each player
-        //if (this.players[0].match != null) {
-        //    var firstTurn = Math.random() < 0.5 ? 0 : 1;
-        //    var firstPlayerTokens = Math.random() < 0.5 ? 0 : 1;
-        //    this.players[0].match.sendDataToAllPlayers(JSON.stringify(["turn",firstTurn, firstPlayerTokens]));
-        //}
     },
 
+    /**
+     *
+     */
     nextTurn: function() {
         this.playerTurn = (this.playerTurn+1) %2;
     },
 
+    /**
+     *
+     * @returns {*}
+     */
     isLocalPlayerTurn: function() {
-        return !!this.players[this.playerTurn].match;
+        return this.game.isLocalPlayerTurn(this.playerTurn);
     },
 
+    /**
+     *
+     * @param index
+     * @returns {boolean}
+     */
     isPlayerTurn: function(index){
         return this.playerTurn === index;
     },
 
+    /**
+     *
+     * @param index
+     * @returns {*}
+     */
     getPlayerAlias: function(index) {
-        return this.players[index].userName;
+        return this.game.getPlayerAlias(index);
     },
 
-    getPlayerTokens: function(index) {
+    /**
+     *
+     * @param index
+     * @returns {*}
+     */
+    getPlayerToken: function(index) {
         if (this.playerTokenSelector == 0) return index == 0 ? this.xTokens : this.oTokens;
         if (this.playerTokenSelector == 1) return index == 1 ? this.xTokens : this.oTokens;
     },
-    getPlayerTokensSymbol: function(index) {
-        return this.getPlayerTokens(index) === this.xTokens ? "X" : "O";
+
+    /**
+     *
+     * @param index
+     * @returns {string}
+     */
+    getPlayerTokenSymbol: function(index) {
+        return this.getPlayerToken(index) === this.xTokens ? "X" : "O";
     },
+
+    /**
+     *
+     * @param row
+     * @param col
+     */
     putToken: function(row, col) {
         console.log("putToken " + row + " " + col);
         if (this.isLocalPlayerTurn() && this.oTokens[row][col] ===0 && this.xTokens[row][col] ===0 &&  this.state === GAMESTATES.STATE_PLAYING) {
             var message = JSON.stringify(["token",row,col]);
             console.log("sent message: " + message);
-            this.players[this.playerTurn].match.sendDataToAllPlayers(message);
+            this.game.send(this.playerTurn, message);
         }
     },
 
+    /**
+     *
+     * @param row
+     * @param col
+     * @param playerID
+     */
     tokenMessageReceived: function(row,col,playerID) {
-        var _this = this;
-        var tokens = this.getPlayerTokens(this.playerTurn);
+        var tokens = this.getPlayerToken(this.playerTurn),
+            _this = this;
+        
         console.log("tokenMessageReceived: " + row + " " + col);
         tokens[row][col] = 1;
         if (this.checkWinnerTokens()) {
@@ -125,34 +147,38 @@ TicTacToeGameModel.prototype = {
                 console.log("submitScore " + this.localUserScore);
                 this.game.submitScore(this.localUserScore);
             }
-        }
-        else if (this.checkTieGame()) {
+        } else if (this.checkTieGame()) {
 
             this.state = GAMESTATES.STATE_SCORES;
-            _this = this;
             setTimeout(function(){_this.showTieAnimation()},100);
             if (this.isMultiplayerGame && this.game.isSocial()) {
                 this.localUserScore+=10;
                 console.log("submitScore " + this.localUserScore);
                 this.game.submitScore(this.localUserScore);
             }
-        }
-        else
-        {
+        } else {
             this.nextTurn();
         }
 
     },
 
+    /**
+     *
+     * @param firstTurn
+     * @param firstPlayertokens
+     */
     firstTurnMessageReceived: function(firstTurn, firstPlayertokens) {
         this.playerTurn = firstTurn;
         this.playerTokenSelector = firstPlayertokens;
-
         this.state = GAMESTATES.STATE_PLAYING;
     },
 
+    /**
+     *
+     * @returns {boolean}
+     */
     checkWinnerTokens: function() {
-        var tokens = this.getPlayerTokens(this.playerTurn);
+        var tokens = this.getPlayerToken(this.playerTurn);
 
         //vertical and horizontal lines
         for (var i = 0; i < 3; ++i) {
@@ -167,6 +193,10 @@ TicTacToeGameModel.prototype = {
         return false;
     },
 
+    /**
+     *
+     * @returns {boolean}
+     */
     checkTieGame: function() {
 
         var n = 0;
@@ -176,26 +206,20 @@ TicTacToeGameModel.prototype = {
                 if (this.oTokens[i][j] === 1) n++;
             }
         }
-
         return n >=9;
     },
 
+    /**
+     *
+     */
     showWinAnimation: function() {
-        alert(this.players[this.playerTurn].userName + " Wins");
-    },
-    showTieAnimation: function() {
-        alert("Tie game");
+        alert(this.game.getPlayerAlias(this.playerTurn) + " Wins")
     },
 
-    disconnect: function(sendMessage) {
-        this.state = GAMESTATES.STATE_IDLE;
-        for (var i = 0; i < this.players.length; ++i) {
-            if (this.players[i].match != null){
-                if (sendMessage){
-                    this.players[i].match.sendDataToAllPlayers(JSON.stringify(["exit"]));
-                    this.players[i].match.disconnect();
-                }
-            }
-        }
+    /**
+     *
+     */
+    showTieAnimation: function() {
+        alert("Tie game");
     }
 };

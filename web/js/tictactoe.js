@@ -134,7 +134,7 @@ TicTacToeGameModel.prototype = {
     tokenMessageReceived: function(row,col,playerID) {
         var tokens = this.getPlayerToken(this.playerTurn),
             _this = this;
-        
+
         console.log("tokenMessageReceived: " + row + " " + col);
         tokens[row][col] = 1;
         if (this.checkWinnerTokens()) {

@@ -5,12 +5,12 @@
  * @param leaderboardId
  * @constructor
  */
-function SocialGame(leaderboardId) {
-    console.log("Class SocialGame Initialized");
+function Game(leaderboardId) {
+    console.log("Class Game Initialized");
 
     var gc,             //  Cocoon.Social.GameCenter
         gp,             //  Cocoon.Social.GooglePlayGames
-        _this = this;   //  SocialGame
+        _this = this;   //  Game
 
     // bind callback methods
     var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -42,10 +42,7 @@ function SocialGame(leaderboardId) {
         this.usingGameCenter = true;
     } else if (Cocoon.Social.GooglePlayGames.nativeAvailable) {
         gp = Cocoon.Social.GooglePlayGames;
-        //clientId parameter is not required in android
-        gp.init({
-            defaultLeaderboard: leaderboardId
-        });
+        gp.init({defaultLeaderboard: leaderboardId});
         this.socialService = gp.getSocialInterface();
         this.multiplayerService = gp.getMultiplayerInterface();
     } else {
@@ -106,8 +103,8 @@ function SocialGame(leaderboardId) {
  *
  * @type {{constructor: Game, model: undefined, ui: undefined, socialService: undefined, multiplayerService: undefined, players: undefined, waitingLogin: boolean, usingGameCenter: boolean, width: number, height: number, size: number, init: Function, handleMatch: Function, loginSocialService: Function, createMatch: Function, cancelMatch: Function, showLeaderboard: Function, disconnect: Function, isSocial: Function, submitScore: Function, isLocalPlayerTurn: Function, getPlayerAlias: Function, send: Function}}
  */
-SocialGame.prototype = {
-    constructor: SocialGame,
+Game.prototype = {
+    constructor: Game,
     width: 0,
     height: 0,
     size: 0,
@@ -339,6 +336,7 @@ SocialGame.prototype = {
      * @returns {boolean}
      */
     showLeaderboard: function() {
+        console.log("Social: "+this.isSocial());
         if(this.isSocial()) {
             this.model.state = GAMESTATES.STATE_IDLE;
             this.socialService.showLeaderboard();

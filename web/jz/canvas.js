@@ -1,29 +1,33 @@
 /**
  *
  * @param game
+ * @param model
+ * @param height
+ * @param width
+ * @param size
  * @constructor
  */
-function Canvas(game) {
+function Canvas(game, model, width, height, size) {
 
     console.log("Class Canvas Initialized");
 
     var isCocoon = (navigator.appVersion.indexOf("CocoonJS") !== -1),
-        scale = Math.min(window.innerHeight/game.height,window.innerWidth/game.width),
+        scale = Math.min(window.innerHeight/height,window.innerWidth/width),
         _this = this;
 
     this.game = game;
-    this.model = game.model;
-    this.canvas_width = game.width;
-    this.canvas_height = game.height;
-    this.boardSize = game.size;
+    this.model = model;
+    this.canvas_width = width;
+    this.canvas_height = height;
+    this.boardSize = size;
     this.canvas = document.createElement(isCocoon ? 'screencanvas' : 'canvas');
-    this.canvas.width = game.width;
-    this.canvas.height = game.height;
+    this.canvas.width = width;
+    this.canvas.height = height;
     this.canvas.style.position = "absolute";
-    this.canvas.style.width = (game.width * scale) + "px";
-    this.canvas.style.height = (game.height * scale) + "px";
-    this.canvas.style.left = (window.innerWidth * 0.5 - game.width * scale * 0.5) + "px";
-    this.canvas.style.top = (window.innerHeight * 0.5 - game.height * scale * 0.5) + "px";
+    this.canvas.style.width = (width * scale) + "px";
+    this.canvas.style.height = (height * scale) + "px";
+    this.canvas.style.left = (window.innerWidth * 0.5 - width * scale * 0.5) + "px";
+    this.canvas.style.top = (window.innerHeight * 0.5 - height * scale * 0.5) + "px";
     document.body.appendChild(this.canvas);
 
     this.ctx = this.canvas.getContext("2d");
@@ -68,14 +72,14 @@ function Canvas(game) {
 Canvas.prototype = {
 
     constructor: Canvas,
+    canvas_width: 0,
+    canvas_height: 0,
+    boardSize: 0,
     assets: undefined,
     game: undefined,
     model: undefined,
     canvas: undefined,
     ctx: undefined,
-    canvas_width: 0,
-    canvas_height: 0,
-    boardSize: 0,
 
     /**
      *
@@ -135,7 +139,7 @@ Canvas.prototype = {
         if (this.game.waitingLogin) {
             this.ctx.fillText("Logging in...", this.canvas_width * 0.01, this.canvas_height * 0.99);
         }
-        else if (this.game.socialService && this.game.socialService.isLoggedIn()) {
+        else if (this.game.isSocial()) {
             this.ctx.fillText("Logged In", this.canvas_width * 0.01, this.canvas_height * 0.99);
         }
     },
@@ -199,7 +203,7 @@ Canvas.prototype = {
         this.ctx.fillStyle = "#bbbbbb";
 
         var first_player_info = {
-            symbol : this.model.getPlayerTokensSymbol(0).toUpperCase(),
+            symbol : this.model.getPlayerTokenSymbol(0).toUpperCase(),
             text : this.model.getPlayerAlias(0).toUpperCase(),
             metrics : {
                 data : null,
@@ -209,7 +213,7 @@ Canvas.prototype = {
         };
 
         var second_player_info = {
-            symbol : this.model.getPlayerTokensSymbol(1).toUpperCase(),
+            symbol : this.model.getPlayerTokenSymbol(1).toUpperCase(),
             text : this.model.getPlayerAlias(1).toUpperCase(),
             metrics : {
                 data : null,
@@ -245,7 +249,7 @@ Canvas.prototype = {
         );
 
         this.ctx.textBaseline = "bottom";
-        this.ctx.fillText("TURN: " + this.model.getPlayerTokensSymbol(this.model.playerTurn), this.canvas_width * 0.5, this.canvas_height * 0.99);
+        this.ctx.fillText("TURN: " + this.model.getPlayerTokenSymbol(this.model.playerTurn), this.canvas_width * 0.5, this.canvas_height * 0.99);
 
     },
 
@@ -315,7 +319,7 @@ Canvas.prototype = {
         this.renderPlayersInfo();
         this.renderExitButton();
 
-        if (this.model.state == GAMESTATES.STATE_SCORES && this.game.socialService && this.game.socialService.isLoggedIn()) {
+        if (this.model.state == GAMESTATES.STATE_SCORES && this.game.isSocial()) {
             this.renderScoresButton();
         }
     },
@@ -334,82 +338,41 @@ Canvas.prototype = {
         var clickedExit = x < this.canvas_width * 0.15 && y > this.canvas_height * 0.9;
     
         if (this.model.state === GAMESTATES.STATE_IDLE) {
-    
-            if (clickedExit) {
-                return;
-            }
 
+            if (clickedExit) return;
             this.game.createMatch(x < this.canvas_width / 2);
-            //var request = new Cocoon.Multiplayer.MatchRequest(2,2);
-            //if (x < this.canvas_width / 2) {
-            //
-            //    if (this.game.multiplayerService == null) {
-            //        alert("Multiplayer is not supported on this device");
-            //        return;
-            //    }
-            //
-            //    if (!this.game.socialService.isLoggedIn()) {
-            //
-            //        this.game.loginSocialService(false);
-            //    }
-            //    else
-            //    {
-            //        this.model.isMultiplayerGame = true;
-            //        this.game.multiplayerService.findMatch(request, this.game.handleMatch);
-            //        this.model.state = GAMESTATES.STATE_CREATING_MATCH;
-            //    }
-            //
-            //
-            //} else {
-            //
-            //    this.model.isMultiplayerGame = false;
-            //    this.game.loopbackServices[0].findAutoMatch(request, this.game.handleMatch);
-            //    this.game.loopbackServices[1].findAutoMatch(request, function(){}); //only listen to the first loopback service delegate
-            //    this.model.state = GAMESTATES.STATE_CREATING_MATCH;
-            //}
-        } else if (this.model.state === GAMESTATES.STATE_CREATING_MATCH) {
-            if (clickedExit) {
-    
-                if (this.model.isMultiplayerGame) {
-                    this.game.multiplayerService.cancelAutoMatch();
-                }
-                else {
-                    this.game.loopbackServices[0].cancelAutomatch();
-                    this.game.loopbackServices[1].cancelAutomatch();
-                }
 
-                this.model.state = GAMESTATES.STATE_IDLE;
-            }
+        } else if (this.model.state === GAMESTATES.STATE_CREATING_MATCH) {
+
+            if (clickedExit) this.game.cancelMatch();
+
         } else if (this.model.state === GAMESTATES.STATE_WAITING_FOR_PLAYERS  ) {
             if (clickedExit) {
-                this.model.disconnect(true);
+                this.game.disconnect(true);
             }
         } else if (this.model.state === GAMESTATES.STATE_PLAYING) {
     
             if (clickedExit) {
-                this.model.disconnect(true);
+                this.game.disconnect(true);
                 return;
             }
-    
+
             var px = x - this.model.boardRect.x;
             var py = y - this.model.boardRect.y;
             if (px >= 0 && py>=0 && px<=this.model.boardRect.w && py <= this.model.boardRect.h) {
-                col = Math.floor(px / (this.model.boardRect.w / 3));
-                row = Math.floor(py / (this.model.boardRect.h / 3));
+                var col = Math.floor(px / (this.model.boardRect.w / 3));
+                var row = Math.floor(py / (this.model.boardRect.h / 3));
                 this.model.putToken(row,col);
             }
         } else if (this.model.state === GAMESTATES.STATE_SCORES) {
             if (clickedExit) {
-                this.model.disconnect(true);
+                this.game.disconnect(true);
                 return;
             }
     
             var clickedScores = (x > this.canvas_width * 0.15 && y > this.canvas_height * 0.9);
             if (clickedScores) {
-                if(this.game.socialService && this.game.socialService.isLoggedIn()){
-                    this.model.disconnect(true);
-                    this.game.socialService.showLeaderboard();
-                } else {
+                if (!this.game.showLeaderboard()) {
                     alert("You must be logged into the Social Service.");
                 }
             }

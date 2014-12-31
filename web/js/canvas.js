@@ -136,7 +136,7 @@ Canvas.prototype = {
 
         this.ctx.textBaseline = "bottom";
         this.ctx.textAlign = "left";
-        if (this.game.waitingLogin) {
+        if (this.game.waitingLogin()) {
             this.ctx.fillText("Logging in...", this.canvas_width * 0.01, this.canvas_height * 0.99);
         }
         else if (this.game.isSocial()) {
@@ -340,7 +340,7 @@ Canvas.prototype = {
         if (this.model.state === GAMESTATES.STATE_IDLE) {
 
             if (clickedExit) return;
-            this.game.createMatch(x < this.canvas_width / 2);
+            this.game.createMatch(x < this.canvas_width / 2, 2, 2);
 
         } else if (this.model.state === GAMESTATES.STATE_CREATING_MATCH) {
 
@@ -357,7 +357,6 @@ Canvas.prototype = {
                 return;
             }
 
-            console.log(this.model.boardRect);
             var px = x - this.model.boardRect.x;
             var py = y - this.model.boardRect.y;
             if (px >= 0 && py>=0 && px<=this.model.boardRect.w && py <= this.model.boardRect.h) {
