@@ -51,7 +51,7 @@ TicTacToeGameModel.prototype = {
      * @param playersInfo
      * @param services
      */
-    initGame: function(playersInfo, services) {
+    init: function(playersInfo, services) {
         this.game.init(playersInfo, services, Math.random() < 0.5 ? 0 : 1, Math.random() < 0.5 ? 0 : 1);
         this.oTokens = [[0,0,0],[0,0,0],[0,0,0]];
         this.xTokens = [[0,0,0],[0,0,0],[0,0,0]];

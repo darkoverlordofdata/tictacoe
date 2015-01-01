@@ -336,22 +336,28 @@ Canvas.prototype = {
         y = y - rect.top;
     
         var clickedExit = x < this.canvas_width * 0.15 && y > this.canvas_height * 0.9;
-    
+
         if (this.model.state === GAMESTATES.STATE_IDLE) {
+
+            console.log('STATE_IDLE');
 
             if (clickedExit) return;
             this.game.createMatch(x < this.canvas_width / 2, 2, 2);
 
         } else if (this.model.state === GAMESTATES.STATE_CREATING_MATCH) {
 
+            console.log('STATE_CREATING_MATCH');
             if (clickedExit) this.game.cancelMatch();
 
         } else if (this.model.state === GAMESTATES.STATE_WAITING_FOR_PLAYERS  ) {
+            console.log('STATE_WAITING_FOR_PLAYERS');
+
             if (clickedExit) {
                 this.game.disconnect(true);
             }
         } else if (this.model.state === GAMESTATES.STATE_PLAYING) {
-    
+            console.log('STATE_PLAYING');
+
             if (clickedExit) {
                 this.game.disconnect(true);
                 return;
@@ -365,6 +371,7 @@ Canvas.prototype = {
                 this.model.putToken(row,col);
             }
         } else if (this.model.state === GAMESTATES.STATE_SCORES) {
+            console.log('STATE_SCORES');
             if (clickedExit) {
                 this.game.disconnect(true);
                 return;

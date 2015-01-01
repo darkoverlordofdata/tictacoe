@@ -1,4 +1,4 @@
-var Match = function(){
+var Match = (function(){
 
     var DEBUG = true;
 
@@ -6,12 +6,12 @@ var Match = function(){
      *
      * Turns Based Match
      *
-     * @param game
      * @param leaderboardId
+     * @param callback
      * @constructor
      *
      */
-    function Match(game, leaderboardId) {
+    function Match(leaderboardId, callback) {
 
         var gc,             //  Cocoon.Social.GameCenter
             gp,             //  Cocoon.Social.GooglePlayGames
@@ -34,7 +34,7 @@ var Match = function(){
         this.getPlayerAlias =       __bind(this.getPlayerAlias, this);
         this.send =                 __bind(this.send, this);
 
-        this.game = game;
+        this.callback = callback;
         this.waitingLogin = false;
         this.usingGameCenter = false;
 
@@ -65,7 +65,7 @@ var Match = function(){
                  */
                 received: function(){
                     if (DEBUG) console.log("Invitation received");
-                    _this.game.multiplayerService('received', _this);
+                    _this.callback('received', _this);
                 },
                 /**
                  * loaded callback
@@ -75,7 +75,7 @@ var Match = function(){
                  */
                 loaded: function(match, error){
                     if (DEBUG) console.log("Invitation ready: (Error: + " + JSON.stringify(error) + ")");
-                    _this.game.multiplayerService('loaded', _this, match, error);
+                    _this.callback('loaded', _this, match, error);
                     _this.handleMatch(match,error);
                 }
             });
@@ -83,11 +83,11 @@ var Match = function(){
         //Social Service Login and Score Listeners
         if (this.socialService) {
             this.socialService.on("loginStatusChanged",function(loggedIn, error){
-                _this.game.socialService('loginStatusChanged', _this, loggedIn, error);
+                _this.callback('loginStatusChanged', _this, loggedIn, error);
                 if (loggedIn) {
                     if (DEBUG) console.log("Logged into social service");
                     _this.socialService.requestScore(function(score, error){
-                        _this.game.socialService('requestScore', _this, score, error);
+                        _this.callback('requestScore', _this, score, error);
                     });
                 }
             });
@@ -107,7 +107,6 @@ var Match = function(){
         usingGameCenter: false,
         isMultiplayerGame: false,
         requestPlayersInfo: undefined,
-        game: undefined,
         socialService: undefined,
         multiplayerService: undefined,
         players: undefined,
@@ -160,20 +159,21 @@ var Match = function(){
 
             if (DEBUG) console.log(match);
             if (!match) {
-                _this.game.handleMatch('error', error ? error.message : "match canceled");
+                _this.callback('error', error ? error.message : "match canceled");
                 return;
             }
 
             if (DEBUG) console.log("match found");
-            _this.game.handleMatch('found', match);
+
+            _this.callback('found', match);
             requestPlayersCallback = function(players, error) {
                 if (error) {
                     if (DEBUG) console.log("requestPlayersInfo:" + error.message);
-                    _this.game.handleMatch('error', "requestPlayersInfo:" + error.message)
+                    _this.callback('error', "requestPlayersInfo:" + error.message)
                     return;
                 }
                 if (DEBUG) console.log("Received players info: " + JSON.stringify(players));
-                _this.game.handleMatch('init', players, _this.isMultiplayerGame ? [_this.multiplayerService] : _this.loopbackServices);
+                _this.callback('init', players, _this.isMultiplayerGame ? [_this.multiplayerService] : _this.loopbackServices);
                 match.start();
             };
 
@@ -194,7 +194,7 @@ var Match = function(){
                  */
                 dataReceived: function(match, data, playerID){
                     if (DEBUG) console.log("received Data: " + data  + " from Player: " + playerID);
-                    _this.game.handleMatch('dataReceived', match, data, playerID);
+                    _this.callback('dataReceived', match, data, playerID);
                 },
                 /**
                  * stateChanged callback
@@ -205,7 +205,7 @@ var Match = function(){
                  */
                 stateChanged: function(match, player, state){
                     if (DEBUG) console.log("onMatchStateChanged: " + player + " " + state);
-                    _this.game.handleMatch('stateChanged', match, player, state);
+                    _this.callback('stateChanged', match, player, state);
                 },
                 /**
                  * connectionWithPlayerFailed callback
@@ -216,7 +216,7 @@ var Match = function(){
                  */
                 connectionWithPlayerFailed: function(match, player, error){
                     if (DEBUG) console.log("onMatchConnectionWithPlayerFailed: " + player + " " + error);
-                    _this.game.handleMatch('connectionWithPlayerFailed', match, player, error);
+                    _this.callback('connectionWithPlayerFailed', match, player, error);
                 },
                 /**
                  * failed callback
@@ -226,7 +226,7 @@ var Match = function(){
                  */
                 failed: function(match, error){
                     if (DEBUG) console.log("onMatchFailed " +  error);
-                    _this.game.handleMatch('failed', match, error);
+                    _this.callback('failed', match, error);
                 }
             });
 
@@ -300,7 +300,9 @@ var Match = function(){
 
             } else {
 
+
                 this.loopbackServices[0].findAutoMatch(request, this.handleMatch);
+                console.log("Match::createMatch");
                 this.loopbackServices[1].findAutoMatch(request, function(){}); //only listen to the first loopback service delegate
             }
 
@@ -412,5 +414,5 @@ var Match = function(){
 
     };
     return Match;
-}();
+}());
 
