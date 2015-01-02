@@ -1,18 +1,11 @@
 /**
- *--------------------------------------------------------------------+
- * match.js
- *--------------------------------------------------------------------+
- * Copyright DarkOverlordOfData (c) 2014
- *--------------------------------------------------------------------+
+ * Ludei Multiplayer Adapter:
  *
- * This file is a part of number9
+ * Turns Based Match
  *
- * number9 is free software; you can copy, modify, and distribute
- * it under the terms of the MIT License
+ * @see https://github.com/ludei/cocoonjs-demos/tree/master/Multiplayer
+ * @dependancies cocoon.js
  *
- *--------------------------------------------------------------------+
- *
-
  */
 var Match = (function(){
 

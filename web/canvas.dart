@@ -282,6 +282,7 @@ class Canvas {
     if (model.state == STATE_IDLE) {
 
       if (clickedExit) return;
+      game.showLeaderboard();
       game.createMatch(x < canvas_width / 2, 2, 2);
 
     } else if (model.state == STATE_CREATING_MATCH) {
@@ -315,7 +316,7 @@ class Canvas {
       var clickedScores = (x > canvas_width * 0.15 && y > canvas_height * 0.9);
       if (clickedScores) {
         if (!game.showLeaderboard()) {
-          window.alert("You must be logged into the Social Service.");
+          //window.alert("You must be logged into the Social Service.");
         }
       }
     }

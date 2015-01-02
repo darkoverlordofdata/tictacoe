@@ -25,7 +25,7 @@ class Game {
   }
 
   start(players, services, firstTurn, firstPlayerTokens) {
-    this.match.callMethod('init', [players, services, firstTurn, firstPlayerTokens]);
+    match.callMethod('init', [players, services, firstTurn, firstPlayerTokens]);
   }
 
 
@@ -34,15 +34,15 @@ class Game {
   }
 
   isLocalPlayerTurn(index) {
-    return this.match.callMethod('isLocalPlayerTurn', [index]);
+    return match.callMethod('isLocalPlayerTurn', [index]);
   }
 
   getPlayerAlias(index) {
-    return this.match.callMethod('getPlayerAlias', [index]);
+    return match.callMethod('getPlayerAlias', [index]);
   }
 
   send(index, message) {
-    this.match.callMethod('send', [index, message]);
+    match.callMethod('send', [index, message]);
   }
 
   isSocial() {
@@ -54,20 +54,20 @@ class Game {
   }
 
   createMatch(multi, players, tokens) {
-    this.match.callMethod('createMatch', [multi, players, tokens]);
+    match.callMethod('createMatch', [multi, players, tokens]);
   }
 
   cancelMatch() {
-    this.match.callMethod('cancelMatch', []);
+    match.callMethod('cancelMatch', []);
   }
 
   disconnect(sendMessage) {
     model.state = STATE_IDLE;
-    this.match.callMethod('disconnect', [sendMessage]);
+    match.callMethod('disconnect', [sendMessage]);
   }
 
   showLeaderboard() {
-    this.match.callMethod('showLeaderboard', []);
+    return match.callMethod('showLeaderboard', []);
   }
 
   invoke(String methodName, List args) {

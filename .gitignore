@@ -5,3 +5,8 @@
 build/
 packages
 pubspec.lock
+
+sign.txt
+tictactoe_release_unsigned.apk
+tictactoe_release.apk
+tictactoe.zip
