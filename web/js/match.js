@@ -1,3 +1,19 @@
+/**
+ *--------------------------------------------------------------------+
+ * match.js
+ *--------------------------------------------------------------------+
+ * Copyright DarkOverlordOfData (c) 2014
+ *--------------------------------------------------------------------+
+ *
+ * This file is a part of number9
+ *
+ * number9 is free software; you can copy, modify, and distribute
+ * it under the terms of the MIT License
+ *
+ *--------------------------------------------------------------------+
+ *
+
+ */
 var Match = (function(){
 
     var DEBUG = true;
@@ -16,7 +32,7 @@ var Match = (function(){
 
         var gc,             //  Cocoon.Social.GameCenter
             gp,             //  Cocoon.Social.GooglePlayGames
-            _this = this,   //  Game
+            _this = this,   //  Match instance
             __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
         if (DEBUG) console.log("Class Match Initialized");
