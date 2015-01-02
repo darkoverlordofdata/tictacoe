@@ -10,8 +10,7 @@ function Game(leaderboardId) {
 
     // bind callback methods
     var _this = this,
-        __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); };},
-        __slice = Array.prototype.slice;
+        __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); };};
 
     this.init =                         __bind(this.init, this);
     this.isLocalPlayerTurn =            __bind(this.isLocalPlayerTurn, this);
@@ -41,7 +40,8 @@ function Game(leaderboardId) {
     this.size = 0.85 * 500;
     this.model = new TicTacToeGameModel(this, this.width, this.height, this.size);
     this.ui = new Canvas(this, this.model, this.width, this.height, this.size);
-    this.match = new Match(leaderboardId,function(type) {_this[type].apply(_this, __slice.call(arguments, 1));});
+    this.match = new Match(leaderboardId,function(type, args) {_this[type].apply(_this, args);});
+    this.match.onTouch(this.ui.canvas, this.ui.onTouch);
 
 }
 
@@ -111,7 +111,7 @@ Game.prototype = {
         console.log(error ? error.message : "match canceled");
     },
 
-    found: function() {
+    found: function(match) {
         this.model.state = GAMESTATES.STATE_WAITING_FOR_PLAYERS;
     },
 

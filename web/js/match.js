@@ -1,6 +1,7 @@
 var Match = (function(){
 
     var DEBUG = true;
+    var isCocoon = (navigator.appVersion.indexOf("CocoonJS") !== -1);
 
     /**
      *
@@ -33,6 +34,7 @@ var Match = (function(){
         this.isLocalPlayerTurn =    __bind(this.isLocalPlayerTurn, this);
         this.getPlayerAlias =       __bind(this.getPlayerAlias, this);
         this.send =                 __bind(this.send, this);
+        this.onTouch =              __bind(this.onTouch, this);
 
         this.callback = callback;
         this.waitingLogin = false;
@@ -65,7 +67,7 @@ var Match = (function(){
                  */
                 received: function(){
                     if (DEBUG) console.log("Invitation received");
-                    _this.callback('received', _this);
+                    _this.callback('received', [_this]);
                 },
                 /**
                  * loaded callback
@@ -75,7 +77,7 @@ var Match = (function(){
                  */
                 loaded: function(match, error){
                     if (DEBUG) console.log("Invitation ready: (Error: + " + JSON.stringify(error) + ")");
-                    _this.callback('loaded', _this, match, error);
+                    _this.callback('loaded', [_this, match, error]);
                     _this.handleMatch(match,error);
                 }
             });
@@ -83,11 +85,11 @@ var Match = (function(){
         //Social Service Login and Score Listeners
         if (this.socialService) {
             this.socialService.on("loginStatusChanged",function(loggedIn, error){
-                _this.callback('loginStatusChanged', _this, loggedIn, error);
+                _this.callback('loginStatusChanged', [_this, loggedIn, error]);
                 if (loggedIn) {
                     if (DEBUG) console.log("Logged into social service");
                     _this.socialService.requestScore(function(score, error){
-                        _this.callback('requestScore', _this, score, error);
+                        _this.callback('requestScore', [_this, score, error]);
                     });
                 }
             });
@@ -110,6 +112,23 @@ var Match = (function(){
         socialService: undefined,
         multiplayerService: undefined,
         players: undefined,
+
+        onTouch: function(canvas, onTouch) {
+            // wire up the ui events
+            if (isCocoon){
+                canvas.addEventListener("touchstart",
+                    function(touchEvent) {
+                        onTouch(touchEvent.targetTouches[0].clientX, touchEvent.targetTouches[0].clientY);
+                    }
+                );
+            } else {
+                canvas.addEventListener("click",
+                    function(ev) {
+                        onTouch(ev.clientX, ev.clientY);
+                    }
+                );
+            }
+        },
 
         /**
          * Initialize a match
@@ -159,21 +178,21 @@ var Match = (function(){
 
             if (DEBUG) console.log(match);
             if (!match) {
-                _this.callback('error', error ? error.message : "match canceled");
+                _this.callback('error', [error ? error.message : "match canceled"]);
                 return;
             }
 
             if (DEBUG) console.log("match found");
 
-            _this.callback('found', match);
+            _this.callback('found', [match]);
             requestPlayersCallback = function(players, error) {
                 if (error) {
                     if (DEBUG) console.log("requestPlayersInfo:" + error.message);
-                    _this.callback('error', "requestPlayersInfo:" + error.message)
+                    _this.callback('error', ["requestPlayersInfo:" + error.message]);
                     return;
                 }
                 if (DEBUG) console.log("Received players info: " + JSON.stringify(players));
-                _this.callback('init', players, _this.isMultiplayerGame ? [_this.multiplayerService] : _this.loopbackServices);
+                _this.callback('init', [players, _this.isMultiplayerGame ? [_this.multiplayerService] : _this.loopbackServices]);
                 match.start();
             };
 
@@ -194,7 +213,7 @@ var Match = (function(){
                  */
                 dataReceived: function(match, data, playerID){
                     if (DEBUG) console.log("received Data: " + data  + " from Player: " + playerID);
-                    _this.callback('dataReceived', match, data, playerID);
+                    _this.callback('dataReceived', [match, data, playerID]);
                 },
                 /**
                  * stateChanged callback
@@ -205,7 +224,7 @@ var Match = (function(){
                  */
                 stateChanged: function(match, player, state){
                     if (DEBUG) console.log("onMatchStateChanged: " + player + " " + state);
-                    _this.callback('stateChanged', match, player, state);
+                    _this.callback('stateChanged', [match, player, state]);
                 },
                 /**
                  * connectionWithPlayerFailed callback
@@ -216,7 +235,7 @@ var Match = (function(){
                  */
                 connectionWithPlayerFailed: function(match, player, error){
                     if (DEBUG) console.log("onMatchConnectionWithPlayerFailed: " + player + " " + error);
-                    _this.callback('connectionWithPlayerFailed', match, player, error);
+                    _this.callback('connectionWithPlayerFailed', [match, player, error]);
                 },
                 /**
                  * failed callback
@@ -226,7 +245,7 @@ var Match = (function(){
                  */
                 failed: function(match, error){
                     if (DEBUG) console.log("onMatchFailed " +  error);
-                    _this.callback('failed', match, error);
+                    _this.callback('failed', [match, error]);
                 }
             });
 
@@ -314,6 +333,7 @@ var Match = (function(){
         cancelMatch: function() {
 
             if (this.isMultiplayerGame) {
+
                 this.multiplayerService.cancelAutoMatch();
             }
             else {
@@ -327,7 +347,7 @@ var Match = (function(){
          * Are we using Social Service
          */
         isSocial: function() {
-            this.socialService && this.socialService.isLoggedIn()
+            return this.socialService && this.socialService.isLoggedIn()
         },
 
         /**
@@ -337,7 +357,7 @@ var Match = (function(){
          */
         showLeaderboard: function() {
             if (DEBUG) console.log("Social: "+this.isSocial());
-            if(this.isSocial()) {
+            if(this.socialService && this.socialService.isLoggedIn()) {
                 this.socialService.showLeaderboard();
                 return true;
             } else {
@@ -371,14 +391,16 @@ var Match = (function(){
          * @param value
          */
         submitScore: function(value) {
-            this.socialService.submitScore(value, function(error) {
-                if (error) {
-                    console.error("Error submitting score: " + error);
-                }
-                else {
-                    if (DEBUG) console.log("Score submitted!");
-                }
-            });
+            if (this.socialService && this.socialService.isLoggedIn()) {
+                this.socialService.submitScore(value, function(error) {
+                    if (error) {
+                        console.error("Error submitting score: " + error);
+                    }
+                    else {
+                        if (DEBUG) console.log("Score submitted!");
+                    }
+                });
+            }
 
         },
 

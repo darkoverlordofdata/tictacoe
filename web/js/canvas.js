@@ -13,8 +13,10 @@ function Canvas(game, model, width, height, size) {
 
     var isCocoon = (navigator.appVersion.indexOf("CocoonJS") !== -1),
         scale = Math.min(window.innerHeight/height,window.innerWidth/width),
-        _this = this;
+        _this = this,
+        __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
+    this.onTouch = __bind(this.onTouch, this);
     this.game = game;
     this.model = model;
     this.canvas_width = width;
@@ -48,20 +50,20 @@ function Canvas(game, model, width, height, size) {
         }, 16);
     });
 
-    // wire up the ui events
-    if (isCocoon){
-        this.canvas.addEventListener("touchstart",
-            function(touchEvent) {
-                _this.onTouch(touchEvent.targetTouches[0].clientX, touchEvent.targetTouches[0].clientY);
-            }
-        );
-    } else {
-        this.canvas.addEventListener("click",
-            function(ev) {
-                _this.onTouch(ev.clientX, ev.clientY);
-            }
-        );
-    }
+    //// wire up the ui events
+    //if (isCocoon){
+    //    this.canvas.addEventListener("touchstart",
+    //        function(touchEvent) {
+    //            _this.onTouch(touchEvent.targetTouches[0].clientX, touchEvent.targetTouches[0].clientY);
+    //        }
+    //    );
+    //} else {
+    //    this.canvas.addEventListener("click",
+    //        function(ev) {
+    //            _this.onTouch(ev.clientX, ev.clientY);
+    //        }
+    //    );
+    //}
 
 }
 

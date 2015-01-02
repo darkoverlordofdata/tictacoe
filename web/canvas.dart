@@ -10,9 +10,9 @@ class Canvas {
   int canvas_width;
   int canvas_height;
   int boardSize;
-  var assets;
-  var canvas;
-  var ctx;
+  Map<String, ImageElement> assets;
+  CanvasElement canvas;
+  CanvasRenderingContext2D ctx;
 
 
   Canvas(this.game, this.model, this.canvas_width, this.canvas_height, this.boardSize) {
@@ -48,21 +48,6 @@ class Canvas {
           }
         });
     });
-
-
-    // wire up the ui events
-    if (isCocoon) {
-      canvas.addEventListener("touchstart",
-          (touchEvent) {
-        onTouch(touchEvent.targetTouches[0].clientX, touchEvent.targetTouches[0].clientY);
-      });
-    } else {
-      canvas.addEventListener("click",
-          (ev){
-        onTouch(ev.clientX, ev.clientY);
-      });
-    }
-
   }
 
   getImages(sources, Function callback) {
@@ -113,10 +98,10 @@ class Canvas {
     ctx.textBaseline = "bottom";
     ctx.textAlign = "left";
     if (game.waitingLogin()) {
-      ctx.fillText("Logging in...", canvas_width * 0.01, canvas_height * 0.99);
+      ctx.fillText("Logging in...", canvas_width * 0.01, canvas_height * 0.80);
     }
     else if (game.isSocial()) {
-      ctx.fillText("Logged In", canvas_width * 0.01, canvas_height * 0.99);
+      ctx.fillText("Logged In", canvas_width * 0.01, canvas_height * 0.80);
     }
   }
 
@@ -142,7 +127,7 @@ class Canvas {
 
 
   renderTokenX(x, y) {
-    ctx.drawImage(
+    ctx.drawImageScaled(
         assets["xbuena.png"],
         x,
         y,
@@ -151,7 +136,7 @@ class Canvas {
   }
 
   renderTokenO(x, y) {
-    ctx.drawImage(
+    ctx.drawImageScaled(
         assets["Obuena.png"],
         x,
         y,
@@ -185,26 +170,26 @@ class Canvas {
         }
     };
 
-    first_player_info['metrics']['x'] = (first_player_info.symbol == "X" ? canvas_width/2 + assets["X.png"].width : canvas_width/2 + assets["O.png"].width);
+    first_player_info['metrics']['x'] = (first_player_info['symbol'] == "X" ? canvas_width/2 + assets["X.png"].width : canvas_width/2 + assets["O.png"].width);
     first_player_info['metrics']['data'] = ctx.measureText(first_player_info['text']);
-    first_player_info['metrics']['textWidth'] = first_player_info['metrics']['data']['width'];
+    first_player_info['metrics']['textWidth'] = first_player_info['metrics']['data'].width;
 
-    second_player_info['metrics']['x'] = (second_player_info.symbol == "X" ? canvas_width/2 + assets["X.png"].width : canvas_width/2 + assets["O.png"].width);
+    second_player_info['metrics']['x'] = (second_player_info['symbol'] == "X" ? canvas_width/2 + assets["X.png"].width : canvas_width/2 + assets["O.png"].width);
     second_player_info['metrics']['data'] = ctx.measureText(second_player_info['text']);
-    second_player_info['metrics']['textWidth'] = second_player_info['metrics']['data']['width'];
+    second_player_info['metrics']['textWidth'] = second_player_info['metrics']['data'].width;
 
-    ctx.fillText(first_player_info.text, canvas_width/2 - first_player_info['metrics']['textWidth'] + assets[first_player_info.symbol+".png"].width, canvas_height * 0.01);
+    ctx.fillText(first_player_info['text'], canvas_width/2 - first_player_info['metrics']['textWidth'] + assets[first_player_info['symbol']+".png"].width, canvas_height * 0.01);
 
-    ctx.drawImage(assets[first_player_info.symbol+".png"],
+    ctx.drawImageScaled(assets[first_player_info['symbol']+".png"],
     canvas_width/2 - first_player_info['metrics']['textWidth'] - assets[first_player_info['symbol']+".png"].width - 10,
     canvas_height * 0.017,
     assets[first_player_info['symbol']+".png"].width/2 ,
     assets[first_player_info['symbol']+".png"].height/2
     );
 
-    ctx.fillText(second_player_info['text'], canvas_width/2 + second_player_info['metrics']['textWidth'] / 2 + assets[second_player_info.symbol+".png"].width, canvas_height * 0.01);
+    ctx.fillText(second_player_info['text'], canvas_width/2 + second_player_info['metrics']['textWidth'] / 2 + assets[second_player_info['symbol']+".png"].width, canvas_height * 0.01);
 
-    ctx.drawImage(assets[second_player_info['symbol']+".png"],
+    ctx.drawImageScaled(assets[second_player_info['symbol']+".png"],
     canvas_width/2 + second_player_info['metrics']['textWidth'] / 2 - assets[second_player_info['symbol']+".png"].width - 10,
     canvas_height * 0.017,
     assets[second_player_info['symbol']+".png"].width/2 ,
@@ -237,8 +222,8 @@ class Canvas {
     var width = canvas_width * 0.15;
     var height = width * 0.3;
     ctx.strokeRect(canvas_width - offset - width, canvas_height -offset - height, width, height);
-    var fontSize = (width * 0.1) << 0 ;
-    ctx.font = fontSize + "pt Helvetica";
+    var fontSize = (width * 0.1).floor() << 0 ;
+    ctx.font =  "${fontSize}pt Helvetica";
     ctx.textBaseline = "middle";
     ctx.fillText("SCORES", canvas_width - offset - width * 0.5 ,canvas_height - height/2 - offset);
   }
@@ -249,7 +234,7 @@ class Canvas {
 
     var boardRect = model.boardRect;
 
-    ctx.drawImage(assets["cuadricula.png"],
+    ctx.drawImageScaled(assets["cuadricula.png"],
     (canvas_width - (assets["cuadricula.png"].width / 2)) / 2,
     (canvas_height - (assets["cuadricula.png"].height / 2)) / 2,
     assets["cuadricula.png"].width / 2,
@@ -260,8 +245,8 @@ class Canvas {
     var col = 0;
     for (row = 0; row < 3; ++row) {
       for (col = 0; col < 3; ++col) {
-        var x = boardRect.x + boardRect.w * (col == 1 ? 0.315 : (col == 0 ? -0.1 : 0.73));
-        var y = boardRect.y + boardRect.h * (row == 1 ? 0.315 : (row == 0 ? -0.1 : 0.73));
+        var x = boardRect['x'] + boardRect['w'] * (col == 1 ? 0.315 : (col == 0 ? -0.1 : 0.73));
+        var y = boardRect['y'] + boardRect['h'] * (row == 1 ? 0.315 : (row == 0 ? -0.1 : 0.73));
 
         if (model.xTokens[row][col] == 1) {
           renderTokenX(x, y + 20);
@@ -314,11 +299,11 @@ class Canvas {
         return;
       }
 
-      var px = x - model.boardRect.x;
-      var py = y - model.boardRect.y;
-      if (px >= 0 && py>=0 && px<=model.boardRect.w && py <= model.boardRect.h) {
-        var col = (px / (model.boardRect.w / 3)).floor();
-        var row = (py / (model.boardRect.h / 3)).floor();
+      var px = x - model.boardRect['x'];
+      var py = y - model.boardRect['y'];
+      if (px >= 0 && py>=0 && px<=model.boardRect['w'] && py <= model.boardRect['h']) {
+        var col = (px / (model.boardRect['w'] / 3)).floor();
+        var row = (py / (model.boardRect['h'] / 3)).floor();
         model.putToken(row,col);
       }
     } else if (model.state == STATE_SCORES) {

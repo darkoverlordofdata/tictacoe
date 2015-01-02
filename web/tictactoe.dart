@@ -36,7 +36,7 @@ class TicTacToeGameModel {
   }
 
   init(JsArray playersInfo, services) {
-    game.init(playersInfo, services, rnd.nextInt(2), rnd.nextInt(2));
+    game.start(playersInfo, services, rnd.nextInt(2), rnd.nextInt(2));
     oTokens = [[0,0,0],[0,0,0],[0,0,0]];
     xTokens = [[0,0,0],[0,0,0],[0,0,0]];
     playerTurn = 0;
@@ -69,7 +69,6 @@ class TicTacToeGameModel {
   }
 
   putToken(row, col) {
-    print("putToken " + row + " " + col);
     if (isLocalPlayerTurn() && oTokens[row][col] == 0 && xTokens[row][col] == 0 && state == STATE_PLAYING) {
       var message = JSON.encode(["token",row,col]);
       print("sent message: " + message);
@@ -79,7 +78,7 @@ class TicTacToeGameModel {
 
   tokenMessageReceived(row,col,playerID) {
     var tokens = getPlayerTokens(playerTurn);
-    print("tokenMessageReceived: " + row + " " + col);
+
     tokens[row][col] = 1;
     if (checkWinnerTokens()) {
 
